@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'database_helper.dart';
 
 class Medication {
   final String id;
@@ -6,8 +7,7 @@ class Medication {
   final String dosage;
   final String time;
   final String type;
-  bool isTaken;
-  final DateTime date;
+  bool status;
 
   Medication({
     required this.id,
@@ -15,29 +15,75 @@ class Medication {
     required this.dosage,
     required this.time,
     required this.type,
-    this.isTaken = false,
-    required this.date,
+    this.status = false,
   });
+
+  // Convert a Medication object into a Map for SQLite.
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'dosage': dosage,
+      'time': time,
+      'type': type,
+      'status': status ? 1 : 0, // Convert boolean to integer for SQLite
+    };
+  }
+
+  // Extract a Medication object from a Map from SQLite.
+  factory Medication.fromMap(Map<String, dynamic> map) {
+    return Medication(
+      id: map['id'],
+      name: map['name'],
+      dosage: map['dosage'],
+      time: map['time'],
+      type: map['type'],
+      status: map['status'] == 1, // Convert integer back to boolean
+    );
+  }
 }
 
-class MedicationProvider extends ChangeNotifier {
-  final List<Medication> _meds = [
-    Medication(id: '1', name: "Vitamin C", dosage: "500mg", time: "08:00 AM", type: "Pill", isTaken: true, date: DateTime.now()),
-  ];
+class MedicationProvider with ChangeNotifier {
+  List<Medication> _medications = [];
 
-  List<Medication> get meds => _meds;
-  List<Medication> get history => _meds.where((m) => m.isTaken).toList();
+  List<Medication> get medications => _medications;
 
-  void addMedication(Medication med) {
-    _meds.add(med);
+  // History list: filters out medications that have been marked as taken
+  List<Medication> get history =>
+      _medications.where((med) => med.status == true).toList();
+
+  // Pending list: filters out medications that have not been taken
+  List<Medication> get pending =>
+      _medications.where((med) => med.status == false).toList();
+
+  // Fetch data from the database and update the UI
+  Future<void> fetchAndSetMedications() async {
+    final dataList = await DatabaseHelper.instance.readAllMedications();
+    _medications = dataList;
     notifyListeners();
   }
 
-  void toggleStatus(String id) {
-    final index = _meds.indexWhere((m) => m.id == id);
-    if (index != -1) {
-      _meds[index].isTaken = !_meds[index].isTaken;
+  // Add new med to database, then to UI
+  Future<void> addMedication(Medication medication) async {
+    await DatabaseHelper.instance.create(medication);
+    _medications.add(medication);
+    notifyListeners();
+  }
+
+  // Toggle "Taken" status in database, then update UI
+  Future<void> toggleStatus(String id) async {
+    final medIndex = _medications.indexWhere((med) => med.id == id);
+    if (medIndex >= 0) {
+      _medications[medIndex].status = !_medications[medIndex].status;
+      await DatabaseHelper.instance.update(_medications[medIndex]);
       notifyListeners();
     }
+  }
+
+  // Delete from database, then update UI
+  Future<void> deleteMedication(String id) async {
+    await DatabaseHelper.instance.delete(id);
+    _medications.removeWhere((med) => med.id == id);
+    notifyListeners();
   }
 }

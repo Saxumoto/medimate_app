@@ -17,6 +17,15 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch meds from the database when the app opens
+    Future.delayed(Duration.zero, () {
+      Provider.of<MedicationProvider>(context, listen: false).fetchAndSetMeds();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final medProvider = Provider.of<MedicationProvider>(context);
     
@@ -59,14 +68,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDashboardBody(MedicationProvider provider) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        const Text("Today's Medications", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        ...provider.meds.map((med) => _buildMedCard(med, provider)).toList(),
-      ],
-    );
+    return provider.meds.isEmpty 
+      ? const Center(child: Text("No medications added yet. Tap + to start!"))
+      : ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            const Text("Today's Medications", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ...provider.meds.map((med) => _buildMedCard(med, provider)).toList(),
+          ],
+        );
   }
 
   Widget _buildMedCard(Medication med, MedicationProvider provider) {
@@ -81,10 +92,16 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           Text("${med.dosage} • ${med.time}", style: const TextStyle(color: Colors.grey)),
         ])),
+        // Status Checkbox
         IconButton(
           icon: Icon(med.isTaken ? Icons.check_circle : Icons.radio_button_unchecked, color: med.isTaken ? const Color(0xFF4B55D6) : Colors.grey),
           onPressed: () => provider.toggleStatus(med.id),
-        )
+        ),
+        // Delete Button
+        IconButton(
+          icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+          onPressed: () => provider.deleteMedication(med.id),
+        ),
       ]),
     );
   }
