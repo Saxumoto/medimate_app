@@ -1,4 +1,4 @@
-# medimate_app
+# MediMate Mobile App
 
 A new Flutter project.
 
