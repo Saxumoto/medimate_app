@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'database_helper.dart';
+import 'notification_service.dart';
 
 class Medication {
   final String id;
@@ -8,6 +10,8 @@ class Medication {
   final String time;
   final String type;
   bool status;
+  final String frequency;
+  final String notes;
 
   Medication({
     required this.id,
@@ -16,7 +20,21 @@ class Medication {
     required this.time,
     required this.type,
     this.status = false,
+    this.frequency = "Daily",
+    this.notes = "",
   });
+
+  // Helper to parse time string (e.g. "08:00 AM") to DateTime for today
+  DateTime get scheduledDateTime {
+    final now = DateTime.now();
+    try {
+      final timeOfDay = DateFormat.jm().parse(time);
+      return DateTime(now.year, now.month, now.day, timeOfDay.hour, timeOfDay.minute);
+    } catch (e) {
+      // Fallback to 8 AM if parsing fails
+      return DateTime(now.year, now.month, now.day, 8, 0);
+    }
+  }
 
   // Convert a Medication object into a Map for SQLite.
   Map<String, dynamic> toMap() {
@@ -27,6 +45,8 @@ class Medication {
       'time': time,
       'type': type,
       'status': status ? 1 : 0, // Convert boolean to integer for SQLite
+      'frequency': frequency,
+      'notes': notes,
     };
   }
 
@@ -39,6 +59,8 @@ class Medication {
       time: map['time'],
       type: map['type'],
       status: map['status'] == 1, // Convert integer back to boolean
+      frequency: map['frequency'] ?? "Daily",
+      notes: map['notes'] ?? "",
     );
   }
 }
@@ -67,7 +89,26 @@ class MedicationProvider with ChangeNotifier {
   Future<void> addMedication(Medication medication) async {
     await DatabaseHelper.instance.create(medication);
     _medications.add(medication);
+    
+    // Schedule notification
+    await NotificationService.scheduleDailyNotification(medication);
+
     notifyListeners();
+  }
+
+  // Update existing med in database and UI
+  Future<void> updateMedication(Medication medication) async {
+    await DatabaseHelper.instance.update(medication);
+    final index = _medications.indexWhere((m) => m.id == medication.id);
+    if (index != -1) {
+      _medications[index] = medication;
+      
+      // Re-schedule notification
+      await NotificationService.cancelNotification(medication.id.hashCode);
+      await NotificationService.scheduleDailyNotification(medication);
+      
+      notifyListeners();
+    }
   }
 
   // Toggle "Taken" status in database, then update UI
@@ -84,6 +125,10 @@ class MedicationProvider with ChangeNotifier {
   Future<void> deleteMedication(String id) async {
     await DatabaseHelper.instance.delete(id);
     _medications.removeWhere((med) => med.id == id);
+    
+    // Cancel notification
+    await NotificationService.cancelNotification(id.hashCode);
+
     notifyListeners();
   }
 }

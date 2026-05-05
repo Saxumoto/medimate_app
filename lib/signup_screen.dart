@@ -11,6 +11,10 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +62,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: _nameController,
                 decoration: InputDecoration(
                   hintText: "Enter your full name",
                   hintStyle: const TextStyle(color: Colors.grey),
@@ -78,6 +83,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: "Enter your email",
@@ -99,6 +105,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   hintText: "Create a password",
@@ -131,6 +138,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 decoration: InputDecoration(
                   hintText: "Re-enter password",
@@ -170,11 +178,30 @@ class _SignupScreenState extends State<SignupScreen> {
                     elevation: 0,
                   ),
                   onPressed: () {
-                    // Navigate to the Profile Setup Screen!
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
-                    );
+                    // Dummy signup validation
+                    if (_nameController.text.isNotEmpty &&
+                        _emailController.text.isNotEmpty &&
+                        _passwordController.text.isNotEmpty &&
+                        _confirmPasswordController.text == _passwordController.text) {
+                      // Navigate to the Profile Setup Screen!
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProfileSetupScreen(
+                            name: _nameController.text,
+                            email: _emailController.text,
+                          ),
+                        ),
+                      );
+                    } else if (_confirmPasswordController.text != _passwordController.text) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Passwords do not match")),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Please fill in all fields")),
+                      );
+                    }
                   },
                   child: const Text(
                     "Sign Up",

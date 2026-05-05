@@ -1,6 +1,6 @@
 {
-    "name": "medimate_app",
-    "short_name": "medimate_app",
+    "name": "MediMate",
+    "short_name": "MediMate",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

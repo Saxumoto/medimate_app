@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Ensure you ran 'flutter pub add intl'
-import 'home_screen.dart';
+import 'package:intl/intl.dart'; 
+import 'package:provider/provider.dart';
+import 'app_shell.dart';
+import 'user_data.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key});
+  final String? name;
+  final String? email;
+  const ProfileSetupScreen({super.key, this.name, this.email});
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -14,6 +18,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   String? selectedBloodType;
   DateTime? _selectedDate;
   final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
 
   final List<String> genders = ['Male', 'Female', 'Other', 'Prefer not to say'];
   final List<String> bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -112,7 +118,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   fillColor: const Color(0xFFF8FAFC),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
-                value: selectedGender,
+                initialValue: selectedGender,
                 items: genders.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
                 onChanged: (val) => setState(() => selectedGender = val),
               ),
@@ -127,6 +133,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         const Text("Weight (kg)", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                         const SizedBox(height: 8),
                         TextField(
+                          controller: _weightController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             hintText: "0.0",
@@ -146,6 +153,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         const Text("Height (cm)", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                         const SizedBox(height: 8),
                         TextField(
+                          controller: _heightController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             hintText: "0.0",
@@ -170,7 +178,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   fillColor: const Color(0xFFF8FAFC),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
-                value: selectedBloodType,
+                initialValue: selectedBloodType,
                 items: bloodTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
                 onChanged: (val) => setState(() => selectedBloodType = val),
               ),
@@ -185,12 +193,33 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const HomeScreen()),
-                      (route) => false,
-                    );
+                  onPressed: () async {
+                    if (_dobController.text.isNotEmpty && selectedGender != null) {
+                      final profile = UserProfile(
+                        id: DateTime.now().toString(),
+                        name: widget.name ?? "User",
+                        email: widget.email ?? "",
+                        dob: _dobController.text,
+                        gender: selectedGender!,
+                        weight: _weightController.text,
+                        height: _heightController.text,
+                        bloodType: selectedBloodType ?? "Unknown",
+                      );
+                      
+                      await Provider.of<UserProvider>(context, listen: false).saveProfile(profile);
+
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AppShell()),
+                          (route) => false,
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Please complete all required fields")),
+                      );
+                    }
                   },
                   child: const Text(
                     "Complete Setup",

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'signup_screen.dart';
+import 'app_shell.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,6 +12,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: "Enter your email",
@@ -70,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   hintText: "Enter your password",
@@ -98,9 +105,12 @@ class _LoginScreenState extends State<LoginScreen> {
               // Forgot Password
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    // Forgot password logic will go here
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                    );
                   },
                   child: const Text(
                     "Forgot Password?",
@@ -126,7 +136,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     elevation: 0,
                   ),
                   onPressed: () {
-                    // Later, this will verify credentials and go to the Home Screen
+                    // Basic validation for dummy login
+                    if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AppShell()),
+                        (route) => false,
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Please enter email and password")),
+                      );
+                    }
                   },
                   child: const Text(
                     "Login",
@@ -147,7 +168,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text("Don't have an account? ", style: TextStyle(color: Colors.grey)),
                   GestureDetector(
                     onTap: () {
-                      // Navigate to Sign Up screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignupScreen()),
+                      );
                     },
                     child: const Text(
                       "Sign Up",

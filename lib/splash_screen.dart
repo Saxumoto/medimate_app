@@ -1,90 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'medication_data.dart';
+import 'user_data.dart';
+import 'onboarding_screen.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _bootUpApp();
+  }
+
+  Future<void> _bootUpApp() async {
+    try {
+      // Capture providers before async gaps
+      final medProvider = Provider.of<MedicationProvider>(context, listen: false);
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      // Fetch data in the background
+      await medProvider.fetchAndSetMedications();
+      await userProvider.fetchProfile();
+      
+      // Enforce the 3-second delay requested by the design
+      await Future.delayed(const Duration(seconds: 3));
+
+      if (mounted) {
+        // Navigate to Onboarding screens as required
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()), 
+        );
+      }
+    } catch (e) {
+      debugPrint("🚨 CRITICAL ERROR DURING BOOT: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // We don't need an AppBar here, just the full screen body
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          // 1. The Background Gradient
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFB58CFF), // Lighter top purple (Approximated from Figma)
-              Color(0xFF4B55D6), // Darker bottom indigo
-            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFB58CFF), // Light Purple
+              Color(0xFF4B55D6), // Primary Indigo
+            ],
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Spacer(flex: 3),
+            const Spacer(),
             
-            // 2. The Logo Placeholder
-            // (I used a tilted default icon for now. We will replace this 
-            // with your actual exported Figma pill image later!)
+            // Tilted Pill Icon
             Transform.rotate(
-              angle: -0.5,
+              angle: 0.5, // Slight tilt
               child: const Icon(
-                Icons.medication, 
-                size: 90,
+                Icons.medication,
+                size: 100,
                 color: Colors.white,
               ),
             ),
             const SizedBox(height: 24),
-
-            // 3. App Title
+            
+            // Title
             const Text(
               'MediMate',
               style: TextStyle(
-                fontSize: 40,
+                fontSize: 48,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
-                letterSpacing: 1.0,
+                letterSpacing: 1.2,
               ),
             ),
-            const SizedBox(height: 16),
-
-            // 4. Tagline
-            const Text(
-              'STAY ON TRACK,\nSTAY HEALTHY.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                letterSpacing: 2.0, // Spreads the letters out like your design
-                height: 1.6, // Adds line spacing
-              ),
-            ),
+            const SizedBox(height: 8),
             
-            const Spacer(flex: 2),
-
-            // 5. The Progress Bar
-            Container(
-              width: 160,
-              height: 6,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3), // Faded white background
-                borderRadius: BorderRadius.circular(10),
-              ),
-              alignment: Alignment.centerLeft,
-              child: Container(
-                width: 60, // The solid white "progress" part
-                height: 6,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+            // Subtitle
+            const Text(
+              'STAY ON TRACK, STAY HEALTHY.',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white70,
+                letterSpacing: 2.0,
               ),
             ),
             
             const Spacer(),
+            
+            // Progress Bar
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 60.0, vertical: 40.0),
+              child: LinearProgressIndicator(
+                color: Colors.white,
+                backgroundColor: Colors.white30,
+              ),
+            ),
           ],
         ),
       ),

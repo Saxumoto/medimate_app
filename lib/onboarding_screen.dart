@@ -17,14 +17,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       "title": "Track Your Meds",
       "text": "Easily log your daily medications and never miss a dose again.",
+      "image": "assets/track.png",
     },
     {
       "title": "Get Reminders",
       "text": "Receive timely notifications so you always know when it's time.",
+      "image": "assets/notif.png",
     },
     {
       "title": "Stay Healthy",
       "text": "Keep a complete history of your health journey right in your pocket.",
+      "image": "assets/org.png",
     },
   ];
 
@@ -76,10 +79,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(
-                          Icons.image_outlined,
-                          size: 100,
-                          color: Color(0xFFB58CFF),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(
+                            onboardingData[index]["image"]!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => const Icon(
+                              Icons.image_outlined,
+                              size: 100,
+                              color: Color(0xFFB58CFF),
+                            ),
+                          ),
                         ),
                       ),
                       const Spacer(),
