@@ -53,7 +53,7 @@ class MedicationsScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0).withOpacity(0.5)),
+                      border: Border.all(color: const Color(0xFFE2E8F0).withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [

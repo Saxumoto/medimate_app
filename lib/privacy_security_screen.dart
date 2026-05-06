@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'preference_provider.dart';
 
-class PrivacySecurityScreen extends StatefulWidget {
+class PrivacySecurityScreen extends StatelessWidget {
   const PrivacySecurityScreen({super.key});
-
-  @override
-  State<PrivacySecurityScreen> createState() => _PrivacySecurityScreenState();
-}
-
-class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
-  bool _shareData = false;
-  bool _biometricLogin = false;
 
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF4B55D6);
+    final prefProvider = Provider.of<PreferenceProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -51,17 +46,17 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                   SwitchListTile(
                     title: const Text("Share Diagnostic Data", style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w500)),
                     subtitle: const Text("Help us improve the app", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    activeColor: primaryColor,
-                    value: _shareData,
-                    onChanged: (val) => setState(() => _shareData = val),
+                    activeThumbColor: primaryColor,
+                    value: prefProvider.shareDiagnosticData,
+                    onChanged: (val) => prefProvider.setShareDiagnosticData(val),
                   ),
                   const Divider(height: 1, color: Color(0xFFF1F5F9)),
                   SwitchListTile(
                     title: const Text("Biometric Login", style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w500)),
                     subtitle: const Text("Use fingerprint or face unlock", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    activeColor: primaryColor,
-                    value: _biometricLogin,
-                    onChanged: (val) => setState(() => _biometricLogin = val),
+                    activeThumbColor: primaryColor,
+                    value: prefProvider.biometricLogin,
+                    onChanged: (val) => prefProvider.setBiometricLogin(val),
                   ),
                 ],
               ),

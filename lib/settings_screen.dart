@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'preference_provider.dart';
 import 'profile_screen.dart';
 import 'login_screen.dart';
 import 'app_drawer.dart';
@@ -8,8 +11,22 @@ import 'help_support_screen.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
+  Future<void> _launchEmail() async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'support@medimate.com',
+      queryParameters: {'subject': 'Support Request - MediMate App'},
+    );
+
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final prefProvider = Provider.of<PreferenceProvider>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       drawer: const AppDrawer(),
@@ -59,8 +76,10 @@ class SettingsScreen extends StatelessWidget {
                     Icons.notifications_none,
                     "Notifications",
                     trailing: Switch(
-                      value: true,
-                      onChanged: (val) {},
+                      value: prefProvider.notificationsEnabled,
+                      onChanged: (val) {
+                        prefProvider.setNotificationsEnabled(val);
+                      },
                       activeThumbColor: const Color(0xFF4B55D6),
                     ),
                   ),
@@ -87,6 +106,13 @@ class SettingsScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
                       );
                     },
+                  ),
+                  _buildDivider(),
+                  _buildMenuTile(
+                    context,
+                    Icons.email_outlined,
+                    "Contact Us",
+                    onTap: _launchEmail,
                   ),
                 ],
               ),

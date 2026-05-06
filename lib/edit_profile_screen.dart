@@ -178,7 +178,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 prefixIcon: const Icon(Icons.people_outline, color: Colors.grey),
               ),
-              value: _selectedGender,
+              initialValue: _selectedGender,
               items: genders.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
               onChanged: (val) => setState(() => _selectedGender = val),
             ),

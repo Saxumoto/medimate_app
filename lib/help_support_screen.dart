@@ -1,11 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
+  Future<void> _launchEmail() async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'support@medimate.com',
+      queryParameters: {
+        'subject': 'Support Request - MediMate App'
+      },
+    );
+
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    } else {
+      // Could show a snackbar here if it fails
+    }
+  }
+
+  Future<void> _launchEmergencyCall() async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: '911');
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF4B55D6);
+    const dangerColor = Color(0xFFEF4444);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -49,19 +74,36 @@ class HelpSupportScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
+            
+            // Emergency Button
             SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
+                  backgroundColor: dangerColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Contact Us functionality coming soon!")));
-                },
+                onPressed: _launchEmergencyCall,
+                icon: const Icon(Icons.emergency_share),
+                label: const Text("Emergency Contact", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Contact Us Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryColor,
+                  side: const BorderSide(color: primaryColor),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _launchEmail,
                 icon: const Icon(Icons.email_outlined),
                 label: const Text("Contact Us", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),

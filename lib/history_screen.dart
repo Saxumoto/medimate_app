@@ -14,28 +14,30 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  DateTime _selectedDate = DateTime.now();
-
   @override
   Widget build(BuildContext context) {
     final medProvider = Provider.of<MedicationProvider>(context);
-    final primaryColor = const Color(0xFF4B55D6);
+    const primaryColor = Color(0xFF4B55D6);
+    final selectedDate = medProvider.selectedDate;
 
-    // Calculate dates for the weekly calendar
+    // Calculate dates for the weekly calendar (centered around selected date)
     final List<DateTime> weekDates = List.generate(
       7,
-      (index) => DateTime.now().subtract(Duration(days: 3 - index)),
+      (index) => selectedDate.subtract(Duration(days: 3 - index)),
     );
 
     // Filter meds for the selected date
-    // Note: The original logic grouped all historical. 
-    // Now we filter to show the schedule/history for the specific selected day.
-    // For a fully robust system, you'd need the database to store a log per day.
-    // For this prototype, we'll display the current list but pretend it's filtered for UX.
-    final takenMeds = medProvider.medications.where((m) => m.status == true).toList();
-    final missedMeds = medProvider.medications.where((m) => m.status == false && m.scheduledDateTime.isBefore(DateTime.now())).toList();
+    // For this prototype, we show medications that are active. 
+    // In a real app, we'd check historical logs for that specific day.
+    final historyMeds = medProvider.medications.where((m) {
+      // If it's today, show based on current status
+      if (DateFormat('yyyy-MM-dd').format(selectedDate) == DateFormat('yyyy-MM-dd').format(DateTime.now())) {
+        return m.status == true || m.scheduledDateTime.isBefore(DateTime.now());
+      }
+      // For past/future dates, since they are "Daily", we just show them all for now
+      return true;
+    }).toList();
     
-    final historyMeds = [...takenMeds, ...missedMeds];
     historyMeds.sort((a, b) => b.scheduledDateTime.compareTo(a.scheduledDateTime));
 
     return Scaffold(
@@ -77,12 +79,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: weekDates.map((date) {
-                  final isSelected = date.day == _selectedDate.day && date.month == _selectedDate.month;
+                  final isSelected = date.day == selectedDate.day && date.month == selectedDate.month;
                   return GestureDetector(
                     onTap: () {
-                      setState(() {
-                        _selectedDate = date;
-                      });
+                      medProvider.setSelectedDate(date);
                     },
                     child: Container(
                       width: 60,
@@ -144,7 +144,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   padding: const EdgeInsets.all(20),
                   children: [
                     Text(
-                      DateFormat('MMMM d, yyyy').format(_selectedDate),
+                      DateFormat('MMMM d, yyyy').format(selectedDate),
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                     ),
                     const SizedBox(height: 16),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'medication_data.dart';
 import 'user_data.dart';
+import 'preference_provider.dart';
 import 'notification_service.dart';
 import 'splash_screen.dart';
 
@@ -23,6 +24,7 @@ class MediMateApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => MedicationProvider()),
         ChangeNotifierProvider(create: (context) => UserProvider()),
+        ChangeNotifierProvider(create: (context) => PreferenceProvider()),
       ],
       child: MaterialApp(
         navigatorKey: navigatorKey,

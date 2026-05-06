@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -8,10 +9,19 @@ import 'medication_data.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  static const MethodChannel _channel = MethodChannel('com.example.medimate_app/alarm_uri');
+  static String? _alarmUri;
 
   static Future<void> init() async {
     tz.initializeTimeZones();
     
+    // Fetch system alarm URI
+    try {
+      _alarmUri = await _channel.invokeMethod<String>('getAlarmUri');
+    } catch (e) {
+      debugPrint("Failed to get alarm URI: $e");
+    }
+
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -41,6 +51,24 @@ class NotificationService {
         }
       },
     );
+
+    // Handle initial notification if the app was launched by tapping it
+    final NotificationAppLaunchDetails? notificationAppLaunchDetails =
+        await _notificationsPlugin.getNotificationAppLaunchDetails();
+    
+    if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+      final response = notificationAppLaunchDetails!.notificationResponse;
+      if (response?.payload != null) {
+        // Delay slightly to ensure navigator is ready
+        Future.delayed(const Duration(seconds: 1), () {
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => NotifyScreen(payload: response!.payload!),
+            ),
+          );
+        });
+      }
+    }
   }
 
   static Future<void> requestPermissions() async {
@@ -68,23 +96,35 @@ class NotificationService {
 
   // Re-designed to accept the full Medication object to pass its ID as payload
   static Future<void> scheduleDailyNotification(Medication med) async {
-    final scheduledDate = tz.TZDateTime.from(med.scheduledDateTime, tz.local);
+    DateTime scheduledDateTime = med.scheduledDateTime;
+    final now = DateTime.now();
+    
+    // If the time has already passed today, schedule for tomorrow
+    if (scheduledDateTime.isBefore(now)) {
+      scheduledDateTime = scheduledDateTime.add(const Duration(days: 1));
+    }
+
+    final scheduledDate = tz.TZDateTime.from(scheduledDateTime, tz.local);
 
     await _notificationsPlugin.zonedSchedule(
       id: med.id.hashCode,
       title: 'MediMate Reminder',
       body: 'Time to take your ${med.name} (${med.dosage})',
       scheduledDate: scheduledDate,
-      notificationDetails: const NotificationDetails(
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
-          'med_reminder_channel',
-          'Medication Reminders',
-          channelDescription: 'Daily notifications for your medication schedule.',
+          'med_reminder_channel_v2', // Changed ID to ensure new settings (sound) take effect
+          'Medication Alarms',
+          channelDescription: 'High-priority alarms for your medication schedule.',
           importance: Importance.max,
-          priority: Priority.high,
-          fullScreenIntent: true, // Ideal for alarms
+          priority: Priority.max,
+          fullScreenIntent: true,
+          category: AndroidNotificationCategory.alarm,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
+          sound: _alarmUri != null ? UriAndroidNotificationSound(_alarmUri!) : null,
+          playSound: true,
         ),
-        iOS: DarwinNotificationDetails(
+        iOS: const DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,

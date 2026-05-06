@@ -73,8 +73,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: [
                       // Placeholder for your Figma Illustrations
                       Container(
-                        height: 250,
+                        height: 240,
                         width: double.infinity,
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(20),

@@ -96,7 +96,7 @@ class StatisticsScreen extends StatelessWidget {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: const Color(0xFF4B55D6).withOpacity(0.1),
+                        color: const Color(0xFF4B55D6).withValues(alpha: 0.1),
                       ),
                     ),
                   ],

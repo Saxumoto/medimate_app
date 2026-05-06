@@ -67,8 +67,15 @@ class Medication {
 
 class MedicationProvider with ChangeNotifier {
   List<Medication> _medications = [];
+  DateTime _selectedDate = DateTime.now();
 
   List<Medication> get medications => _medications;
+  DateTime get selectedDate => _selectedDate;
+
+  void setSelectedDate(DateTime date) {
+    _selectedDate = date;
+    notifyListeners();
+  }
 
   // History list: filters out medications that have been marked as taken
   List<Medication> get history =>
