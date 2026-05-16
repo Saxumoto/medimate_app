@@ -107,7 +107,8 @@ class _NotifyScreenState extends State<NotifyScreen> {
                     onPressed: () async {
                       final provider = Provider.of<MedicationProvider>(context, listen: false);
                       // Set status to true (taken) if not already
-                      if (!_medication!.status) {
+                      final isTaken = provider.isMedicationTaken(_medication!.id, DateTime.now());
+                      if (!isTaken) {
                         await provider.toggleStatus(_medication!.id);
                       }
                       

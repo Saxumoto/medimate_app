@@ -27,14 +27,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
 
     // Filter meds for the selected date
-    // For this prototype, we show medications that are active. 
-    // In a real app, we'd check historical logs for that specific day.
     final historyMeds = medProvider.medications.where((m) {
-      // If it's today, show based on current status
-      if (DateFormat('yyyy-MM-dd').format(selectedDate) == DateFormat('yyyy-MM-dd').format(DateTime.now())) {
-        return m.status == true || m.scheduledDateTime.isBefore(DateTime.now());
+      // Don't show history for future dates
+      final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final selectedStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+      
+      if (selectedDate.isAfter(DateTime.now()) && selectedStr != todayStr) {
+        return false;
       }
-      // For past/future dates, since they are "Daily", we just show them all for now
+      
+      // If it's today, show if taken OR if it's time to take it
+      if (selectedStr == todayStr) {
+        return medProvider.isMedicationTaken(m.id, selectedDate) || 
+               m.scheduledDateTime.isBefore(DateTime.now());
+      }
+      
+      // For past dates, show everything (as they were expected daily)
       return true;
     }).toList();
     
@@ -197,7 +205,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildHistoryCard(BuildContext context, Medication med, MedicationProvider provider) {
-    final bool isTaken = med.status;
+    final bool isTaken = provider.isMedicationTaken(med.id, provider.selectedDate);
     final iconColor = isTaken ? const Color(0xFF22C55E) : const Color(0xFFEF4444);
     final iconData = isTaken ? Icons.check_circle : Icons.cancel;
     final statusText = isTaken ? "Taken" : "Missed";

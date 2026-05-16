@@ -80,7 +80,8 @@ class HomeScreen extends StatelessWidget {
                 itemCount: medProvider.medications.length,
                 itemBuilder: (context, index) {
                   final med = medProvider.medications[index];
-                  return _buildMedicationCard(context, med, primaryColor, successColor);
+                  final isTaken = medProvider.isMedicationTaken(med.id, DateTime.now());
+                  return _buildMedicationCard(context, med, primaryColor, successColor, isTaken);
                 },
               ),
             const SizedBox(height: 24),
@@ -112,7 +113,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMedicationCard(BuildContext context, Medication med, Color primaryColor, Color successColor) {
+  Widget _buildMedicationCard(BuildContext context, Medication med, Color primaryColor, Color successColor, bool isTaken) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -166,7 +167,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              if (med.status)
+              if (isTaken)
                 Icon(Icons.check_circle, color: successColor)
               else
                 SizedBox(

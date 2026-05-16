@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'user_data.dart';
+import 'profile_setup_screen.dart';
 import 'signup_screen.dart';
 import 'app_shell.dart';
 import 'forgot_password_screen.dart';
@@ -135,14 +138,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     // Basic validation for dummy login
                     if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AppShell()),
-                        (route) => false,
-                      );
+                      final userProvider = Provider.of<UserProvider>(context, listen: false);
+                      await userProvider.fetchProfile();
+                      
+                      if (context.mounted) {
+                        if (userProvider.profile == null) {
+                          // If no profile exists, go to setup
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => ProfileSetupScreen(
+                              email: _emailController.text,
+                            )),
+                          );
+                        } else {
+                          // Profile exists, go to main app
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AppShell()),
+                            (route) => false,
+                          );
+                        }
+                      }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Please enter email and password")),

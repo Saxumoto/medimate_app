@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4, // Bumped version
+      version: 5, // Bumped version for logs table
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -39,6 +39,17 @@ class DatabaseHelper {
     }
     if (oldVersion < 4) {
       await db.execute('ALTER TABLE user_profile ADD COLUMN profileImage TEXT DEFAULT ""');
+    }
+    if (oldVersion < 5) {
+      await db.execute('''
+      CREATE TABLE medication_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        medicationId TEXT NOT NULL,
+        date TEXT NOT NULL,
+        status INTEGER NOT NULL,
+        UNIQUE(medicationId, date)
+      )
+      ''');
     }
   }
 
@@ -75,6 +86,44 @@ class DatabaseHelper {
       profileImage TEXT DEFAULT ""
     )
     ''');
+
+    await db.execute('''
+    CREATE TABLE medication_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      medicationId TEXT NOT NULL,
+      date TEXT NOT NULL,
+      status INTEGER NOT NULL,
+      UNIQUE(medicationId, date)
+    )
+    ''');
+  }
+
+  // LOGS METHODS
+  Future<void> saveLog(String medicationId, String date, bool status) async {
+    final db = await instance.database;
+    await db.insert(
+      'medication_logs',
+      {
+        'medicationId': medicationId,
+        'date': date,
+        'status': status ? 1 : 0,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getLogsForDate(String date) async {
+    final db = await instance.database;
+    return await db.query(
+      'medication_logs',
+      where: 'date = ?',
+      whereArgs: [date],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getAllLogs() async {
+    final db = await instance.database;
+    return await db.query('medication_logs', orderBy: 'date DESC');
   }
 
   // INSERT PROFILE
